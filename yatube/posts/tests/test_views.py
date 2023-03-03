@@ -142,7 +142,6 @@ class PostPagesTests(TestCase):
 
     def test_post_creation_check(self):
         """Проверка создания поста на страницах"""
-
         group = Group.objects.create(slug='group2',
                                      title='group2 titile',
                                      description='group2 description')
