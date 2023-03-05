@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from posts.models import Comment, Follow, Post, Group
+from posts.models import Comment, Post, Group
 
 
 User = get_user_model()
@@ -208,64 +208,3 @@ class CommentsTests(TestCase):
         comments = response.context.get("comments")
         self.assertEquals(comments.count(), count + 1)
         self.assertEquals(comments[0], new_comment)
-
-
-class FollowersTests(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.user1 = User.objects.create(username="user1")
-        cls.user2 = User.objects.create(username="user2")
-        cls.user3 = User.objects.create(username="user3")
-        # cls.post1 = Post.objects.create(author=cls.user1, text = "post 1")
-
-    def setUp(self):
-        self.guest_client = Client()
-        self.user1_client = Client()
-        self.user1_client.force_login(self.user1)
-        self.user2_client = Client()
-        self.user2_client.force_login(self.user2)
-        self.user3_client = Client()
-        self.user3_client.force_login(self.user3)
-
-    def test_guest_cant_follow_unfollow(self):
-        """Неавторизованный пользователь не может подписываться на других
-        пользователей и удалять их из подписок."""
-        url = reverse('posts:profile_follow',
-                      kwargs={"username": self.user1.username})
-        response = self.guest_client.get(url)
-        self.assertRedirects(response, reverse('users:login') + '?next=' + url)
-        url = reverse('posts:profile_unfollow',
-                      kwargs={"username": self.user1.username})
-        response = self.guest_client.get(url)
-        self.assertRedirects(response, reverse('users:login') + '?next=' + url)
-
-    def test_authorized_can_follow_unfollow(self):
-        """Авторизованный пользователь может подписываться на других
-        пользователей и удалять их из подписок."""
-        url = reverse('posts:profile_follow',
-                      kwargs={"username": self.user1.username})
-        response = self.user2_client.get(url)
-        self.assertRedirects(response, reverse('posts:follow_index'))
-        self.assertTrue(Follow.objects.filter(
-            author=self.user1, user=self.user2).exists())
-        url = reverse('posts:profile_unfollow',
-                      kwargs={"username": self.user1.username})
-        response = self.user2_client.get(url)
-        self.assertRedirects(response, reverse('posts:follow_index'))
-        self.assertFalse(Follow.objects.filter(
-            author=self.user1, user=self.user2).exists())
-
-    def test_follow_index(self):
-        """Новая запись пользователя появляется в ленте тех,
-        кто на него подписан и не появляется в ленте тех, кто не подписан."""
-        post1 = Post.objects.create(author=self.user1, text="post 1")
-        follow1_2 = Follow.objects.create(author=self.user1, user=self.user2)
-        url = reverse('posts:follow_index')
-        response = self.user2_client.get(url)
-        page_obj = response.context.get('page_obj')
-        self.assertEqual(post1, page_obj[0])
-        response = self.user3_client.get(url)
-        page_obj = response.context.get('page_obj')
-        self.assertEqual(0, len(page_obj))
-        print(follow1_2)

@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.views.decorators.cache import cache_page
-from .models import Post, Group, Comment, Follow
+from .models import Post, Group, Follow
 from .forms import PostForm, CommentForm
 from .paginator import pagination
 
@@ -50,8 +50,8 @@ def post_detail(request, post_id):
     this_post = get_object_or_404(Post, pk=post_id)
     posts = this_post.author.posts.all()
     post_count = posts.count()
-    form = CommentForm(request.POST or None)
-    comments = Comment.objects.filter(post=this_post)
+    form = CommentForm()
+    comments = this_post.comments.all()
     context = {
         'post': this_post,
         'post_count': post_count,
@@ -134,5 +134,5 @@ def profile_follow(request, username):
 @login_required
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
-    Follow.objects.get(user=request.user, author=author).delete()
+    Follow.objects.filter(user=request.user, author=author).delete()
     return redirect('posts:follow_index')
