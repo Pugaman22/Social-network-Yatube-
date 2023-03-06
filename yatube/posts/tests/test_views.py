@@ -245,7 +245,7 @@ class ImageTests(TestCase):
         self.assertEquals(image_path, post.image.name[:len("posts/small")])
 
     def test_image_is_in_context(self):
-        """при выводе поста с картинкой изображение передаётся в словаре
+        """При выводе поста с картинкой изображение передаётся в словаре
 context"""
 
         small_gif = (
@@ -293,7 +293,6 @@ class FollowersTests(TestCase):
         cls.user1 = User.objects.create(username="user1")
         cls.user2 = User.objects.create(username="user2")
         cls.user3 = User.objects.create(username="user3")
-        # cls.post1 = Post.objects.create(author=cls.user1, text = "post 1")
 
     def setUp(self):
         self.guest_client = Client()
@@ -336,7 +335,7 @@ class FollowersTests(TestCase):
         """Новая запись пользователя появляется в ленте тех,
         кто на него подписан и не появляется в ленте тех, кто не подписан."""
         post1 = Post.objects.create(author=self.user1, text="post 1")
-        follow1_2 = Follow.objects.create(author=self.user1, user=self.user2)
+        Follow.objects.create(author=self.user1, user=self.user2)
         url = reverse('posts:follow_index')
         response = self.user2_client.get(url)
         page_obj = response.context.get('page_obj')

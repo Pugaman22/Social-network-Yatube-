@@ -33,13 +33,17 @@ def group_posts(request, slug):
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
-    following = author.following.exists()
+    following = author.following
+    if request.user.is_authenticated or not following.exists():
+        is_following = False
+    else:
+        is_following = following.filter(user=request.user).exists()
     posts = author.posts.select_related('group')
     post_count = posts.count()
     page_obj = pagination(request, posts)
     context = {
         'author': author,
-        'following': following,
+        'is_following': is_following,
         'page_obj': page_obj,
         'post_count': post_count,
     }
@@ -112,10 +116,7 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    user_following = Follow.objects.filter(user=request.user).values_list(
-        'author_id', flat=True
-    )
-    posts = Post.objects.filter(author_id__in=user_following)
+    posts = Post.objects.filter(author__following__user=request.user)
     page_obj = pagination(request, posts)
     context = {
         'page_obj': page_obj,
